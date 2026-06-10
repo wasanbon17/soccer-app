@@ -6,7 +6,7 @@ function App() {
   return (
     <div>
       <h1 style={{ textAlign: "center", fontFamily: "sans-serif" }}>
-        サッカースタジアム 2D
+        ⚽ W杯グループF 戦術シミュレーター
       </h1>
       <Stadium />
     </div>

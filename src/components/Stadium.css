@@ -1,13 +1,141 @@
 /* 3Dシーン（Canvas）の表示領域。
    Canvas は親要素の大きさいっぱいに広がるので、ここで高さを決めます。 */
 .scene {
+  position: relative; /* テロップ(.telop)をこの領域内に重ねる基準にする */
   width: 90vw;
   max-width: 900px;
   height: 60vh; /* 画面の高さの60% */
   margin: 24px auto 16px; /* 中央寄せ */
-  background-color: #87ceeb; /* 背景（空っぽい水色） */
+  /* 背景：ダークスモーキーのグラデーション（上が少し明るいチャコール） */
+  background: linear-gradient(180deg, #2c323a 0%, #1a1d21 100%);
   border-radius: 8px;
   overflow: hidden; /* 角丸からはみ出さないように */
+}
+
+/* タイムライン連動の解説テロップ。
+   .scene の上部に重ねる、半透明の黒背景＋白文字の洗練デザイン。 */
+.telop {
+  position: absolute;
+  top: 58px; /* フォーメーションバーの下に重ねる */
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80%;
+  padding: 10px 18px;
+  background-color: rgba(0, 0, 0, 0.6); /* 半透明の黒 */
+  color: #ffffff; /* 白文字 */
+  font-family: sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1); /* 細い光の縁取りで高級感 */
+  border-radius: 8px;
+  backdrop-filter: blur(4px); /* 背景を少しぼかして視認性UP */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none; /* 3Dのカメラ操作を邪魔しない */
+  z-index: 10;
+}
+
+/* フォーメーション情報バー（Team A 4-3-3 vs Team B 4-4-2）。
+   .scene 上部中央に重ねる、ダークプレミアムなピル型バー。 */
+.formation {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12); /* 細い光の縁取り */
+  border-radius: 999px; /* ピル型 */
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  font-family: sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  pointer-events: none; /* 3Dのカメラ操作を邪魔しない */
+  z-index: 10;
+}
+.formation__team--a {
+  color: #8fb6d6; /* Team A 明るめスチールブルー */
+}
+.formation__team--b {
+  color: #e0a79e; /* Team B 明るめテラコッタ */
+}
+.formation__vs {
+  color: #aab2ba;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* チーム選択ドロップダウン（ホーム／アウェイの2つを横並び） */
+.control {
+  width: 90vw;
+  max-width: 900px;
+  margin: 8px auto 0;
+  font-family: sans-serif;
+  display: flex; /* 2つのドロップダウンを横並びに */
+  flex-wrap: wrap; /* 狭い画面では折り返す */
+  align-items: center;
+  gap: 16px;
+}
+.control__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #cfd6dd;
+}
+.control__select {
+  padding: 6px 12px;
+  background-color: #23282e;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* 監督・フォーメーション・戦術の情報パネル */
+.teaminfo {
+  width: 90vw;
+  max-width: 900px;
+  margin: 10px auto 0;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #262c34 0%, #1b1f24 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  font-family: sans-serif;
+  color: #e8edf2;
+}
+.teaminfo__name {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.teaminfo__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+}
+.teaminfo__tag {
+  padding: 2px 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 12px;
+  color: #aab2ba;
+}
+.teaminfo__tactics {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #c7cdd3;
 }
 
 /* 画面下部のシークバー（スライダー）まわり。2D版から流用。 */
@@ -31,4 +159,203 @@
 .seekbar__range {
   flex: 1;
   cursor: pointer;
+}
+
+/* スカウティングレポートの開閉ボタン */
+.report-toggle {
+  padding: 6px 14px;
+  background-color: #2b333c;
+  color: #e8edf2;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.report-toggle:hover {
+  background-color: #343d47;
+}
+
+/* スカウティングレポート本体（画面右に固定） */
+.report {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 16px 18px;
+  background: linear-gradient(160deg, #20262d 0%, #161a1f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  font-family: sans-serif;
+  color: #e8edf2;
+  z-index: 50;
+}
+.report__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.report__title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #ffd24a;
+}
+.report__close {
+  background: none;
+  border: none;
+  color: #aab2ba;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.report__close:hover {
+  color: #ffffff;
+}
+.report__team {
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* レポート内：チームごとのブロック（ホーム / アウェイ） */
+.report__block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.report__block:first-of-type {
+  margin-top: 10px;
+  border-top: none;
+  padding-top: 0;
+}
+.report__role {
+  display: inline-block;
+  padding: 2px 10px;
+  background-color: rgba(143, 182, 214, 0.18);
+  color: #8fb6d6;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* 所属クラブのバッジ（選手名の右に小さく） */
+.report__club {
+  margin-left: 8px;
+  padding: 1px 7px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #aab2ba;
+  vertical-align: middle;
+}
+.report__section {
+  margin-top: 16px;
+}
+.report__heading {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8fb6d6;
+  border-left: 3px solid #8fb6d6;
+  padding-left: 8px;
+}
+.report__player {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.report__num {
+  flex: 0 0 auto;
+  font-weight: 800;
+  color: #ffd24a;
+  font-size: 14px;
+}
+.report__pname {
+  font-size: 14px;
+  font-weight: 700;
+}
+.report__pstyle {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c2c8ce;
+}
+.report__chances {
+  margin: 0;
+  padding-left: 18px;
+}
+.report__chances li {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #cdd3d9;
+  margin-bottom: 6px;
+}
+
+/* 実況タイムライン（画面下部・スクロール可能） */
+.timeline {
+  width: 90vw;
+  max-width: 900px;
+  margin: 0 auto 28px;
+  padding: 14px 16px;
+  background: linear-gradient(160deg, #20262d 0%, #161a1f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  font-family: sans-serif;
+  color: #e8edf2;
+}
+.timeline__title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #ffd24a;
+  margin-bottom: 10px;
+}
+.timeline__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px; /* これを超えるとスクロール */
+  overflow-y: auto;
+}
+.timeline__item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #cdd3d9;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.timeline__item:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+}
+.timeline__item--active {
+  background-color: rgba(143, 182, 214, 0.16);
+  border-color: #8fb6d6;
+  color: #ffffff;
+}
+.timeline__min {
+  flex: 0 0 auto;
+  min-width: 40px;
+  font-weight: 800;
+  color: #8fb6d6;
+}
+.timeline__text {
+  flex: 1;
+  line-height: 1.5;
 }

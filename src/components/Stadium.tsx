@@ -1,17 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 // OrbitControls=カメラ操作, Text=3D文字, Billboard=常にカメラを向く板。
 import { OrbitControls, Text, Billboard } from "@react-three/drei";
-import {
-  players,
-  TIMES,
-  type Position,
-  DECOY_PLAYER_ID,
-  PULLED_PLAYER_ID,
-  OPEN_SPACE,
-  SPACE_OPEN_TIME,
-  BALL_TRACK,
-} from "../data/players";
+import { TEAMS, buildMatch, TIMES, type Position } from "../data/players";
 import { Arrow } from "./Arrow";
 import { PitchLines } from "./PitchLines";
 import "./Stadium.css";
@@ -55,11 +46,30 @@ function toWorld(pos: Position, y: number): [number, number, number] {
 }
 
 function Stadium() {
+  const [homeKey, setHomeKey] = useState(TEAMS[0].key); // ホーム（攻撃側）
+  const [awayKey, setAwayKey] = useState(TEAMS[1].key); // アウェイ（守備側）
   const [time, setTime] = useState(MIN_TIME);
+  const [showReport, setShowReport] = useState(true); // スカウティングレポートの開閉
+
+  // 選んだ2チームから試合データを組み立てる（チーム変更時だけ再計算）。
+  const match = useMemo(() => buildMatch(homeKey, awayKey), [homeKey, awayKey]);
+  const {
+    players,
+    decoyId,
+    pulledId,
+    openSpace,
+    spaceOpenTime,
+    ballTrack,
+    explanations,
+  } = match;
+
+  // 上部プルダウンで選んだチーム（対戦カード・レポート表示に使う）。
+  const homeTeam = match.home; // ホーム（攻撃）
+  const awayTeam = match.away; // アウェイ（守備）
 
   // 矢印用：囮 と 釣られた守備 の現在位置と最終目的地。
-  const decoy = players.find((p) => p.id === DECOY_PLAYER_ID)!;
-  const pulled = players.find((p) => p.id === PULLED_PLAYER_ID)!;
+  const decoy = players.find((p) => p.id === decoyId)!;
+  const pulled = players.find((p) => p.id === pulledId)!;
   const ARROW_Y = 0.3;
   const decoyFrom = toWorld(positionAtTime(decoy.track, time), ARROW_Y);
   const decoyTo = toWorld(decoy.track[decoy.track.length - 1], ARROW_Y);
@@ -68,26 +78,110 @@ function Stadium() {
 
   // スポットライト演出の明るさ（0〜1）。
   const glow = Math.min(
-    Math.max((time - SPACE_OPEN_TIME) / (MAX_TIME - SPACE_OPEN_TIME), 0),
+    Math.max((time - spaceOpenTime) / (MAX_TIME - spaceOpenTime), 0),
     1
   );
-  const spaceCenter = toWorld(OPEN_SPACE, 0);
+  const spaceCenter = toWorld(openSpace, 0);
 
   // ボールの現在位置。
-  const ball = toWorld(positionAtTime(BALL_TRACK, time), BALL_RADIUS);
+  const ball = toWorld(positionAtTime(ballTrack, time), BALL_RADIUS);
+
+  // 現在の時刻(time)に対応する解説文を選ぶ。
+  let explanationIndex = 0;
+  for (let i = 0; i < TIMES.length; i++) {
+    if (time >= TIMES[i]) explanationIndex = i;
+  }
+  const explanation = explanations[explanationIndex];
+
+  // 実況タイムライン（攻撃側チーム）。現在時刻に該当する項目をハイライトする。
+  const timeline = homeTeam.timeline;
+  let activeTimelineIndex = 0;
+  for (let i = 0; i < timeline.length; i++) {
+    if (time >= timeline[i].time) activeTimelineIndex = i;
+  }
 
   return (
     <div>
+      {/* チーム選択ドロップダウン（ホーム=攻撃 / アウェイ=守備） */}
+      <div className="control">
+        <label className="control__label">
+          ホーム（攻撃）
+          <select
+            className="control__select"
+            value={homeKey}
+            onChange={(e) => {
+              setHomeKey(e.target.value);
+              setTime(MIN_TIME); // 切り替え時は先頭に戻す
+            }}
+          >
+            {TEAMS.map((t) => (
+              <option key={t.key} value={t.key}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="control__label">
+          アウェイ（守備）
+          <select
+            className="control__select"
+            value={awayKey}
+            onChange={(e) => {
+              setAwayKey(e.target.value);
+              setTime(MIN_TIME); // 切り替え時は先頭に戻す
+            }}
+          >
+            {TEAMS.map((t) => (
+              <option key={t.key} value={t.key}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* スカウティングレポートの開閉ボタン */}
+        <button
+          className="report-toggle"
+          onClick={() => setShowReport((v) => !v)}
+        >
+          {showReport ? "レポートを隠す" : "📋 スカウティングレポート"}
+        </button>
+      </div>
+
+      {/* 監督・フォーメーション・戦術の情報パネル（攻撃側チーム） */}
+      <div className="teaminfo">
+        <div className="teaminfo__name">{homeTeam.name}</div>
+        <div className="teaminfo__meta">
+          <span className="teaminfo__tag">監督</span>
+          <span>{homeTeam.manager}</span>
+          <span className="teaminfo__tag">フォーメーション</span>
+          <span>{homeTeam.formation}</span>
+        </div>
+        <div className="teaminfo__tactics">{homeTeam.tactics}</div>
+      </div>
+
       <div className="scene">
         <Canvas camera={{ position: [0, 45, 45], fov: 50 }}>
           <ambientLight intensity={0.6} />
           <directionalLight position={[20, 40, 20]} intensity={1} />
 
-          {/* 床（ピッチ）：ダークグレー */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[PITCH_WIDTH, PITCH_DEPTH]} />
-            <meshStandardMaterial color="#333333" />
-          </mesh>
+          {/* 芝生（刈り込みストライプ）：濃淡2色の緑を横方向に交互配置して臨場感を出す */}
+          {Array.from({ length: 10 }).map((_, i) => {
+            const stripeW = PITCH_WIDTH / 10; // 帯1本の幅
+            const x = -PITCH_WIDTH / 2 + stripeW * (i + 0.5); // 帯の中心X
+            return (
+              <mesh
+                key={i}
+                position={[x, 0, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+              >
+                <planeGeometry args={[stripeW, PITCH_DEPTH]} />
+                <meshStandardMaterial
+                  color={i % 2 === 0 ? "#33523c" : "#2c4836"}
+                />
+              </mesh>
+            );
+          })}
 
           {/* 白いライン */}
           <PitchLines width={PITCH_WIDTH} depth={PITCH_DEPTH} />
@@ -122,7 +216,7 @@ function Stadium() {
                 <mesh position={[wx, PLAYER_RADIUS, wz]}>
                   <sphereGeometry args={[PLAYER_RADIUS, 32, 32]} />
                   <meshStandardMaterial
-                    color={player.team === "home" ? "#1e6fff" : "#e23b3b"}
+                    color={player.team === "home" ? "#6b93b8" : "#bd7a70"}
                   />
                 </mesh>
                 {/* 背番号。Billboard で常にカメラの方を向く。 */}
@@ -154,6 +248,20 @@ function Stadium() {
 
           <OrbitControls />
         </Canvas>
+
+        {/* フォーメーション情報（ホーム vs アウェイ。プルダウンの選択と動的連動） */}
+        <div className="formation">
+          <span className="formation__team formation__team--a">
+            {homeTeam.name} {homeTeam.formation}
+          </span>
+          <span className="formation__vs">VS</span>
+          <span className="formation__team formation__team--b">
+            {awayTeam.name} {awayTeam.formation}
+          </span>
+        </div>
+
+        {/* タイムライン連動の解説テロップ（3Dの上に重ねる半透明オーバーレイ） */}
+        <div className="telop">{explanation}</div>
       </div>
 
       {/* 画面下部のシークバー */}
@@ -168,6 +276,78 @@ function Stadium() {
           className="seekbar__range"
         />
       </div>
+
+      {/* 実況タイムライン（クリックでその局面へジャンプ。スクロール可能） */}
+      <div className="timeline">
+        <div className="timeline__title">
+          実況タイムライン｜{homeTeam.name}
+        </div>
+        <div className="timeline__list">
+          {timeline.map((item, i) => (
+            <button
+              key={i}
+              className={
+                "timeline__item" +
+                (i === activeTimelineIndex ? " timeline__item--active" : "")
+              }
+              onClick={() => setTime(item.time)}
+            >
+              <span className="timeline__min">{item.minute}</span>
+              <span className="timeline__text">{item.text}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* スカウティングレポート（画面右側のサイドパネル。ホーム・アウェイ両方を表示） */}
+      {showReport && (
+        <aside className="report">
+          <div className="report__head">
+            <span className="report__title">スカウティングレポート</span>
+            <button
+              className="report__close"
+              onClick={() => setShowReport(false)}
+              aria-label="閉じる"
+            >
+              ×
+            </button>
+          </div>
+
+          {[
+            { team: homeTeam, role: "ホーム（攻撃）" },
+            { team: awayTeam, role: "アウェイ（守備）" },
+          ].map(({ team, role }) => (
+            <div className="report__block" key={role}>
+              <div className="report__role">{role}</div>
+              <div className="report__team">{team.name}</div>
+
+              <section className="report__section">
+                <h3 className="report__heading">注目選手 / キーマン</h3>
+                {team.keyPlayers.map((kp, i) => (
+                  <div className="report__player" key={i}>
+                    <div className="report__pbody">
+                      <div className="report__pname">
+                        {kp.name}
+                        <span className="report__club">{kp.club}</span>
+                      </div>
+                      <div className="report__pstyle">{kp.style}</div>
+                    </div>
+                  </div>
+                ))}
+              </section>
+
+              <section className="report__section">
+                <h3 className="report__heading">過去の決定機分析</h3>
+                <ul className="report__chances">
+                  {team.pastChances.map((c, i) => (
+                    <li key={i}>{c}</li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          ))}
+        </aside>
+      )}
     </div>
   );
 }
