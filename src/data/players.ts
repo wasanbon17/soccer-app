@@ -55,6 +55,13 @@ const FORMATIONS: Record<string, Lane[]> = {
     { x: 56, ys: [36, 64] },
     { x: 66, ys: [50] },
   ],
+  "3-2-4-1": [
+    { x: 8, ys: [50] }, // GK
+    { x: 24, ys: [28, 50, 72] }, // 3バック
+    { x: 40, ys: [38, 62] }, // 2ボランチ
+    { x: 55, ys: [16, 40, 60, 84] }, // 攻撃的な4枚
+    { x: 66, ys: [50] }, // 1トップ
+  ],
   "4-3-3": [
     { x: 8, ys: [50] },
     { x: 24, ys: [16, 40, 60, 84] },
@@ -157,7 +164,7 @@ export const TEAMS: TeamData[] = [
     key: "japan",
     name: "日本代表",
     manager: "森保一",
-    formation: "3-4-2-1",
+    formation: "3-2-4-1",
     tactics:
       "3-4-2-1。中村敬斗のカットインと、左サイドのオーバーラップで左サイドを崩す。",
     startingEleven: [
