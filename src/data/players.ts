@@ -138,6 +138,8 @@ export type TeamData = {
   pastChances: string[]; // 過去の決定機・得点パターンの分析
   // 実況タイムライン。time はシークバー位置(0〜100)に対応し、クリックでその局面へジャンプ。
   timeline: { minute: string; text: string; time: number }[];
+  // スタメン11人。陣形のライン順(GK→DF→MF→FW)で並べ、3Dの選手とindexで対応させる。
+  startingEleven: { number: number; name: string; position: string }[];
   decoyId: number; // 囮（実線の矢印）= home の選手ID
   decoyTo: Position; // 囮の到達点
   extraMoves?: Move[]; // オーバーラップ等、矢印を出さない補助の動き
@@ -149,15 +151,28 @@ export type TeamData = {
 const SPACE_OPEN_TIME = 50; // スペースが光り始める時刻（全シナリオ共通）
 
 export const TEAMS: TeamData[] = [
-  // ----- 日本代表（森保一 / 4-2-3-1） -----
-  // 左の中村敬斗(id10)がハーフスペースへカットイン(囮)→左SB(id5)が大外をオーバーラップ(補助)。
+  // ----- 日本代表（森保一 / 3-4-2-1） -----
+  // 左の中村敬斗(LMF, id8)がハーフスペースへカットイン(囮)→左CB伊藤(id4)が大外をオーバーラップ(補助)。
   {
     key: "japan",
     name: "日本代表",
     manager: "森保一",
-    formation: "4-2-3-1",
+    formation: "3-4-2-1",
     tactics:
-      "可変式4-2-3-1。中村敬斗のカットインと、左SBのオーバーラップで左サイドを崩す。",
+      "3-4-2-1。中村敬斗のカットインと、左サイドのオーバーラップで左サイドを崩す。",
+    startingEleven: [
+      { number: 1, name: "鈴木彩艶", position: "GK" },
+      { number: 3, name: "谷口彰悟", position: "CB" },
+      { number: 16, name: "渡辺剛", position: "CB" },
+      { number: 21, name: "伊藤洋輝", position: "CB" },
+      { number: 14, name: "伊東純也", position: "RMF" },
+      { number: 15, name: "鎌田大地", position: "DMF" },
+      { number: 24, name: "佐野海舟", position: "DMF" },
+      { number: 13, name: "中村敬斗", position: "LMF" },
+      { number: 10, name: "堂安律", position: "ST" },
+      { number: 8, name: "久保建英", position: "ST" },
+      { number: 18, name: "上田綺世", position: "CF" },
+    ],
     keyPlayers: [
       { name: "中村敬斗", club: "スタッド・ランス", style: "内側へ絞ってのミドルシュートとチャンスメイクを担う左の主軸" },
       { name: "伊東純也", club: "KRCヘンク", style: "右サイドを切り裂く絶対的なスピードスター" },
@@ -173,13 +188,13 @@ export const TEAMS: TeamData[] = [
       { minute: "38分", text: "空いた大外を左SBがオーバーラップ、決定的なクロス。", time: 75 },
       { minute: "45分", text: "前半終了間際、左サイド起点に決定機を作り出す。", time: 100 },
     ],
-    decoyId: 10, // 左の中村敬斗（AM左）
+    decoyId: 8, // 中村敬斗（3-4-2-1のLMF, id8）
     decoyTo: { x: 70, y: 58 }, // 内側ハーフスペースへ絞る
-    extraMoves: [{ id: 5, to: { x: 66, y: 86 } }], // 左SBの大外オーバーラップ
+    extraMoves: [{ id: 4, to: { x: 66, y: 86 } }], // 左CB伊藤の大外オーバーラップ
     openSpace: { x: 70, y: 82 }, // 空いた大外レーン
     ballStart: { x: 50, y: 70 },
     explanations: [
-      "森保ジャパン、4-2-3-1で前進を開始。左サイドに中村敬斗が構える。",
+      "森保ジャパン、3-4-2-1で前進を開始。左サイドに中村敬斗が構える。",
       "中村敬斗がボールを受け、内側のハーフスペースへ絞っていく。",
       "中村のカットインに相手のサイドが食いつき、大外のレーンが空く。",
       "空いた大外を左サイドバックが一気にオーバーラップ。",
@@ -196,6 +211,19 @@ export const TEAMS: TeamData[] = [
     formation: "3-4-2-1",
     tactics:
       "最後尾からの流麗なビルドアップ。両ウイングバックが高い位置を取り、幅を作って前進する。",
+    startingEleven: [
+      { number: 1, name: "フェルブルッヘン", position: "GK" },
+      { number: 4, name: "ファン・ダイク", position: "CB" },
+      { number: 5, name: "アケ", position: "CB" },
+      { number: 2, name: "ギアトルイダ", position: "CB" },
+      { number: 22, name: "フリンポン", position: "RWB" },
+      { number: 21, name: "デ・ヨング", position: "CMF" },
+      { number: 14, name: "ラインデルス", position: "CMF" },
+      { number: 11, name: "ガクポ", position: "LWB" },
+      { number: 10, name: "シモンズ", position: "OMF" },
+      { number: 20, name: "マレン", position: "OMF" },
+      { number: 9, name: "ブロッビー", position: "CF" },
+    ],
     keyPlayers: [
       { name: "シャビ・シモンズ", club: "トッテナム・ホットスパー", style: "ハーフスペースの支配者" },
       { name: "ジェレミー・フリンポン", club: "リヴァプールFC", style: "超攻撃的右WB" },
@@ -235,6 +263,19 @@ export const TEAMS: TeamData[] = [
     formation: "4-3-3",
     tactics:
       "自陣の堅固なブロックから、ボールを奪って一気に前線へ繋ぐ鋭いカウンター。",
+    startingEleven: [
+      { number: 1, name: "ダフメニ", position: "GK" },
+      { number: 12, name: "ケチリダ", position: "RB" },
+      { number: 3, name: "タルビ", position: "CB" },
+      { number: 4, name: "メリア", position: "CB" },
+      { number: 16, name: "アブディ", position: "LB" },
+      { number: 6, name: "スキリ", position: "CM" },
+      { number: 13, name: "ライドゥニ", position: "CM" },
+      { number: 8, name: "ベンロムダン", position: "CM" },
+      { number: 7, name: "ムサクニ", position: "RW" },
+      { number: 9, name: "ジャジリ", position: "CF" },
+      { number: 11, name: "スリティ", position: "LW" },
+    ],
     keyPlayers: [
       { name: "エリス・スキリ", club: "アイントラハト・フランクフルト", style: "中盤の底でのボール奪取と展開の要" },
     ],
@@ -270,6 +311,19 @@ export const TEAMS: TeamData[] = [
     formation: "3-5-2",
     tactics:
       "従来の堅守速攻から脱却。流動的なパスワークと攻撃的なハイプレスで主導権を握る。",
+    startingEleven: [
+      { number: 1, name: "オルセン", position: "GK" },
+      { number: 4, name: "リンデロフ", position: "CB" },
+      { number: 3, name: "ヒエン", position: "CB" },
+      { number: 5, name: "ダニエルソン", position: "CB" },
+      { number: 2, name: "クラフト", position: "RWB" },
+      { number: 8, name: "スヴァンベリ", position: "CM" },
+      { number: 6, name: "オルソン", position: "CM" },
+      { number: 7, name: "ラーション", position: "CM" },
+      { number: 16, name: "アウグスティンソン", position: "LWB" },
+      { number: 9, name: "ギョケレス", position: "CF" },
+      { number: 10, name: "クルゼフスキ", position: "ST" },
+    ],
     keyPlayers: [
       { name: "ヴィクトル・ギョェケレス", club: "アーセナルFC", style: "理不尽なフィジカルと決定力を持つ怪物ストライカー" },
       { name: "デヤン・クルゼフスキ", club: "トッテナム・ホットスパー", style: "左足のチャンスメーカー" },
@@ -298,6 +352,43 @@ export const TEAMS: TeamData[] = [
   },
 ];
 
+// buildMatch が参照する全チーム（現状はドロップダウン用 TEAMS と同一）。
+export const ALL_TEAMS: TeamData[] = [...TEAMS];
+
+// 実況タイムラインの1イベント。クリックで home/away と time を同時に切り替える。
+export type MatchEvent = {
+  minute: string;
+  text: string;
+  homeKey: string; // この局面で攻撃しているチーム
+  awayKey: string; // 守備側
+  time: number; // シークバー位置(0〜100)
+};
+
+// 「日本 vs オランダ」想定のテスト用実況タイムライン。
+export const MATCH_TIMELINE: MatchEvent[] = [
+  {
+    minute: "0分",
+    text: "キックオフ。日本は3-4-2-1、オランダも3-4-2-1でスタート。両チーム、まずは基本陣形で様子を見る。",
+    homeKey: "japan",
+    awayKey: "netherlands",
+    time: 0,
+  },
+  {
+    minute: "24分",
+    text: "⚠️オランダの決定機：シモンズが右ハーフスペースでボールを引き出し、空いた大外をフリンポンが猛烈なスピードで駆け上がる『右サイドのオーバーロード』を展開。",
+    homeKey: "netherlands",
+    awayKey: "japan",
+    time: 100,
+  },
+  {
+    minute: "65分",
+    text: "🔥日本の決定機：左サイドの中村敬斗が内側に絞ってタメを作り、大外を伊藤洋輝がオーバーラップしてチャンスを創出！",
+    homeKey: "japan",
+    awayKey: "netherlands",
+    time: 100,
+  },
+];
+
 // ============================================================
 // 試合（ホーム×アウェイ）データ。Stadium が描画に使う最終的な形。
 // ============================================================
@@ -315,8 +406,8 @@ export type Match = {
 
 // ホーム/アウェイのキーから試合データを組み立てる。
 export function buildMatch(homeKey: string, awayKey: string): Match {
-  const home = TEAMS.find((t) => t.key === homeKey) ?? TEAMS[0];
-  const away = TEAMS.find((t) => t.key === awayKey) ?? TEAMS[1];
+  const home = ALL_TEAMS.find((t) => t.key === homeKey) ?? TEAMS[0];
+  const away = ALL_TEAMS.find((t) => t.key === awayKey) ?? TEAMS[1];
 
   // 22人を両陣形で配置 → 釣られる守備を自動選出 → 戦術アクションを付与。
   const base = buildPlayers(home.formation, away.formation);

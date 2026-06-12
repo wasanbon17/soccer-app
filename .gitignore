@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Env files（環境変数。秘密情報のコミット防止。.env.example は共有用に除外しない）
+.env
+.env.*
+!.env.example

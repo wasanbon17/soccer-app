@@ -1,8 +1,14 @@
 import { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 // OrbitControls=カメラ操作, Text=3D文字, Billboard=常にカメラを向く板。
-import { OrbitControls, Text, Billboard } from "@react-three/drei";
-import { TEAMS, buildMatch, TIMES, type Position } from "../data/players";
+import { OrbitControls, Text, Billboard, Html } from "@react-three/drei";
+import {
+  TEAMS,
+  buildMatch,
+  MATCH_TIMELINE,
+  TIMES,
+  type Position,
+} from "../data/players";
 import { Arrow } from "./Arrow";
 import { PitchLines } from "./PitchLines";
 import "./Stadium.css";
@@ -49,7 +55,9 @@ function Stadium() {
   const [homeKey, setHomeKey] = useState(TEAMS[0].key); // ホーム（攻撃側）
   const [awayKey, setAwayKey] = useState(TEAMS[1].key); // アウェイ（守備側）
   const [time, setTime] = useState(MIN_TIME);
-  const [showReport, setShowReport] = useState(true); // スカウティングレポートの開閉
+  const [showReport, setShowReport] = useState(true); // サイドパネルの開閉
+  const [reportTab, setReportTab] = useState<"scout" | "lineup">("scout"); // レポート / スタメン表
+  const [hoveredId, setHoveredId] = useState<number | null>(null); // ホバー中の選手
 
   // 選んだ2チームから試合データを組み立てる（チーム変更時だけ再計算）。
   const match = useMemo(() => buildMatch(homeKey, awayKey), [homeKey, awayKey]);
@@ -93,12 +101,15 @@ function Stadium() {
   }
   const explanation = explanations[explanationIndex];
 
-  // 実況タイムライン（攻撃側チーム）。現在時刻に該当する項目をハイライトする。
-  const timeline = homeTeam.timeline;
-  let activeTimelineIndex = 0;
-  for (let i = 0; i < timeline.length; i++) {
-    if (time >= timeline[i].time) activeTimelineIndex = i;
-  }
+  // 実況タイムライン（日本 vs オランダ想定）。現在の home/away/time に一致するイベントをハイライト。
+  const activeEventIndex = MATCH_TIMELINE.findIndex(
+    (ev) => ev.homeKey === homeKey && ev.awayKey === awayKey && ev.time === time
+  );
+
+  // ホームのドロップダウン表示値（念のため TEAMS に無いキーは japan にフォールバック）。
+  const homeSelectValue = TEAMS.some((t) => t.key === homeKey)
+    ? homeKey
+    : "japan";
 
   return (
     <div>
@@ -108,7 +119,7 @@ function Stadium() {
           ホーム（攻撃）
           <select
             className="control__select"
-            value={homeKey}
+            value={homeSelectValue}
             onChange={(e) => {
               setHomeKey(e.target.value);
               setTime(MIN_TIME); // 切り替え時は先頭に戻す
@@ -207,13 +218,25 @@ function Stadium() {
             color="#fff0b0"
           />
 
-          {/* 選手（球）＋ 頭上の背番号 */}
+          {/* 選手（球）＋ 頭上の背番号。ホバーで選手情報ツールチップを表示。 */}
           {players.map((player) => {
+            const teamData = player.team === "home" ? homeTeam : awayTeam;
+            const seIndex =
+              player.team === "home" ? player.id - 1 : player.id - 12;
+            const se = teamData.startingEleven[seIndex];
+            const shirt = se ? se.number : player.number; // 実際の背番号
             const pos = positionAtTime(player.track, time);
             const [wx, , wz] = toWorld(pos, 0);
             return (
               <group key={player.id}>
-                <mesh position={[wx, PLAYER_RADIUS, wz]}>
+                <mesh
+                  position={[wx, PLAYER_RADIUS, wz]}
+                  onPointerOver={(e) => {
+                    e.stopPropagation();
+                    setHoveredId(player.id);
+                  }}
+                  onPointerOut={() => setHoveredId(null)}
+                >
                   <sphereGeometry args={[PLAYER_RADIUS, 32, 32]} />
                   <meshStandardMaterial
                     color={player.team === "home" ? "#6b93b8" : "#bd7a70"}
@@ -229,9 +252,23 @@ function Stadium() {
                     anchorX="center"
                     anchorY="middle"
                   >
-                    {player.number}
+                    {shirt}
                   </Text>
                 </Billboard>
+                {/* ホバー時の選手ツールチップ（背番号・名前・ポジション） */}
+                {hoveredId === player.id && se && (
+                  <Html
+                    position={[wx, PLAYER_RADIUS * 2 + 3.5, wz]}
+                    center
+                    zIndexRange={[100, 0]}
+                  >
+                    <div className="tooltip3d">
+                      <span className="tooltip3d__num">#{se.number}</span>
+                      <span className="tooltip3d__name">{se.name}</span>
+                      <span className="tooltip3d__pos">{se.position}</span>
+                    </div>
+                  </Html>
+                )}
               </group>
             );
           })}
@@ -277,23 +314,25 @@ function Stadium() {
         />
       </div>
 
-      {/* 実況タイムライン（クリックでその局面へジャンプ。スクロール可能） */}
+      {/* 実況タイムライン（日本 vs オランダ）。クリックで陣形・攻守・時刻が同時にジャンプ。 */}
       <div className="timeline">
-        <div className="timeline__title">
-          実況タイムライン｜{homeTeam.name}
-        </div>
+        <div className="timeline__title">実況タイムライン｜日本 vs オランダ</div>
         <div className="timeline__list">
-          {timeline.map((item, i) => (
+          {MATCH_TIMELINE.map((ev, i) => (
             <button
               key={i}
               className={
                 "timeline__item" +
-                (i === activeTimelineIndex ? " timeline__item--active" : "")
+                (i === activeEventIndex ? " timeline__item--active" : "")
               }
-              onClick={() => setTime(item.time)}
+              onClick={() => {
+                setHomeKey(ev.homeKey);
+                setAwayKey(ev.awayKey);
+                setTime(ev.time);
+              }}
             >
-              <span className="timeline__min">{item.minute}</span>
-              <span className="timeline__text">{item.text}</span>
+              <span className="timeline__min">{ev.minute}</span>
+              <span className="timeline__text">{ev.text}</span>
             </button>
           ))}
         </div>
@@ -303,7 +342,26 @@ function Stadium() {
       {showReport && (
         <aside className="report">
           <div className="report__head">
-            <span className="report__title">スカウティングレポート</span>
+            <div className="report__tabs">
+              <button
+                className={
+                  "report__tab" +
+                  (reportTab === "scout" ? " report__tab--active" : "")
+                }
+                onClick={() => setReportTab("scout")}
+              >
+                レポート
+              </button>
+              <button
+                className={
+                  "report__tab" +
+                  (reportTab === "lineup" ? " report__tab--active" : "")
+                }
+                onClick={() => setReportTab("lineup")}
+              >
+                スタメン表
+              </button>
+            </div>
             <button
               className="report__close"
               onClick={() => setShowReport(false)}
@@ -313,39 +371,60 @@ function Stadium() {
             </button>
           </div>
 
-          {[
-            { team: homeTeam, role: "ホーム（攻撃）" },
-            { team: awayTeam, role: "アウェイ（守備）" },
-          ].map(({ team, role }) => (
-            <div className="report__block" key={role}>
-              <div className="report__role">{role}</div>
-              <div className="report__team">{team.name}</div>
+          {reportTab === "scout"
+            ? [
+                { team: homeTeam, role: "ホーム（攻撃）" },
+                { team: awayTeam, role: "アウェイ（守備）" },
+              ].map(({ team, role }) => (
+                <div className="report__block" key={role}>
+                  <div className="report__role">{role}</div>
+                  <div className="report__team">{team.name}</div>
 
-              <section className="report__section">
-                <h3 className="report__heading">注目選手 / キーマン</h3>
-                {team.keyPlayers.map((kp, i) => (
-                  <div className="report__player" key={i}>
-                    <div className="report__pbody">
-                      <div className="report__pname">
-                        {kp.name}
-                        <span className="report__club">{kp.club}</span>
+                  <section className="report__section">
+                    <h3 className="report__heading">注目選手 / キーマン</h3>
+                    {team.keyPlayers.map((kp, i) => (
+                      <div className="report__player" key={i}>
+                        <div className="report__pbody">
+                          <div className="report__pname">
+                            {kp.name}
+                            <span className="report__club">{kp.club}</span>
+                          </div>
+                          <div className="report__pstyle">{kp.style}</div>
+                        </div>
                       </div>
-                      <div className="report__pstyle">{kp.style}</div>
-                    </div>
-                  </div>
-                ))}
-              </section>
+                    ))}
+                  </section>
 
-              <section className="report__section">
-                <h3 className="report__heading">過去の決定機分析</h3>
-                <ul className="report__chances">
-                  {team.pastChances.map((c, i) => (
-                    <li key={i}>{c}</li>
-                  ))}
-                </ul>
-              </section>
-            </div>
-          ))}
+                  <section className="report__section">
+                    <h3 className="report__heading">過去の決定機分析</h3>
+                    <ul className="report__chances">
+                      {team.pastChances.map((c, i) => (
+                        <li key={i}>{c}</li>
+                      ))}
+                    </ul>
+                  </section>
+                </div>
+              ))
+            : [
+                { team: homeTeam, role: "ホーム（攻撃）" },
+                { team: awayTeam, role: "アウェイ（守備）" },
+              ].map(({ team, role }) => (
+                <div className="report__block" key={role}>
+                  <div className="report__role">{role}</div>
+                  <div className="report__team">
+                    {team.name}　{team.formation}
+                  </div>
+                  <ul className="lineup__list">
+                    {team.startingEleven.map((p, i) => (
+                      <li className="lineup__row" key={i}>
+                        <span className="lineup__num">{p.number}</span>
+                        <span className="lineup__pos">{p.position}</span>
+                        <span className="lineup__name">{p.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
         </aside>
       )}
     </div>
