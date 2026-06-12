@@ -1,74 +1,45 @@
-# React + TypeScript + Vite
+# ⚽️ W杯グループF 戦術シミュレーター
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![Deploy with Vercel](https://vercelbutton.com/api/button.svg)](https://soccer-app-flax.vercel.app/)
 
-Currently, two official plugins are available:
+**「試合の実況」と「戦術ボード」が完全同期する、新しいサッカー観戦体験。**
+テキストの実況タイムラインに合わせて、3Dのコート上で選手たちが戦術通りに連動して動く次世代のシミュレーターアプリです。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+👉 **[Live Demo（ここから実際に遊べます）](https://soccer-app-flax.vercel.app/)**
 
-## React Compiler
+## ✨ 主な機能 (Features)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **🔄 実況と戦術の完全連動:** タイムラインの実況をクリックすると、その場面の選手の動き（オーバーラップ、ハーフスペースへの侵入など）が3Dコート上で連動して再生されます。
+* **📊 チーム＆選手データ:** 各チームのフォーメーション、監督の戦術意図、キープレイヤーのプレースタイルを詳細に確認できます。
+* **🏟 3Dフィールドビュー:** 選手の配置や視線を直感的に把握できる3D戦術ボードを実装しています。
 
-## Expanding the ESLint configuration
+## 🤝 コントリビューター募集中！ (We need your tactical knowledge!)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+このアプリはまだ完成していません！エンジニアの方だけでなく、**サッカーの戦術分析が好きな方、特定の国の代表チームに詳しい方**の力を必要としています。
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+「この試合の、この時間帯の崩しを再現したい！」「この選手のプレースタイルはこう書くべきだ！」といった熱い戦術データをお待ちしています。
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### データの追加・修正方法
+戦術データや選手データは、TypeScript（JSON形式に近い）で管理されています。プログラミングの深い知識がなくてもデータの追加が可能です。
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. `src/data/players.ts` （選手データや実況ごとの座標データ）
+2. `src/data/teams.ts` （チームの基本情報やフォーメーション設定）
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+上記のファイルを直接編集して **Pull Request** を送っていただくか、**Issues** に「〇〇戦のデータを作ってほしい！」とリクエストを書き込んでください。
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 💻 開発環境のセットアップ (Local Development)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-# Vercel更新用
+手元で動かしてみたいエンジニアの方向けの手順です。
+
+```bash
+# リポジトリのクローン
+git clone [https://github.com/wasanbon17/soccer-app.git](https://github.com/wasanbon17/soccer-app.git)
+
+# ディレクトリへ移動
+cd soccer-app
+
+# パッケージのインストール
+npm install
+
+# ローカルサーバーの立ち上げ（localhost:5173）
+npm run dev
