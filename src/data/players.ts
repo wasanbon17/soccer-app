@@ -158,7 +158,7 @@ export type TeamData = {
 const SPACE_OPEN_TIME = 50; // スペースが光り始める時刻（全シナリオ共通）
 
 export const TEAMS: TeamData[] = [
-  // ----- 日本代表（森保一 / 3-4-2-1） -----
+  // ----- 日本代表（森保一 / 3-2-4-1） -----
   // 左の中村敬斗(LMF, id8)がハーフスペースへカットイン(囮)→左CB伊藤(id4)が大外をオーバーラップ(補助)。
   {
     key: "japan",
@@ -166,7 +166,7 @@ export const TEAMS: TeamData[] = [
     manager: "森保一",
     formation: "3-2-4-1",
     tactics:
-      "3-4-2-1。中村敬斗のカットインと、左サイドのオーバーラップで左サイドを崩す。",
+      "3-2-4-1。中村敬斗のカットインと、左サイドのオーバーラップで左サイドを崩す。",
     startingEleven: [
       { number: 1, name: "鈴木彩艶", position: "GK" },
       { number: 3, name: "谷口彰悟", position: "CB" },
@@ -189,19 +189,19 @@ export const TEAMS: TeamData[] = [
       "大外を回り込む左サイドバックへのスルーパス → 深い位置からの折り返しでフィニッシュ。",
     ],
     timeline: [
-      { minute: "0分", text: "キックオフ。森保ジャパンが4-2-3-1で立ち上がる。", time: 0 },
+      { minute: "0分", text: "キックオフ。森保ジャパンが3-2-4-1で立ち上がる。", time: 0 },
       { minute: "15分", text: "左サイドで中村敬斗がタメを作り、リズムを掴み始める。", time: 25 },
       { minute: "24分", text: "左サイドの崩し！中村が内側へ絞り、相手SBを引きつける。", time: 50 },
       { minute: "38分", text: "空いた大外を左SBがオーバーラップ、決定的なクロス。", time: 75 },
       { minute: "45分", text: "前半終了間際、左サイド起点に決定機を作り出す。", time: 100 },
     ],
-    decoyId: 8, // 中村敬斗（3-4-2-1のLMF, id8）
+    decoyId: 8, // 中村敬斗（3-2-4-1のLMF, id8）
     decoyTo: { x: 70, y: 58 }, // 内側ハーフスペースへ絞る
     extraMoves: [{ id: 4, to: { x: 66, y: 86 } }], // 左CB伊藤の大外オーバーラップ
     openSpace: { x: 70, y: 82 }, // 空いた大外レーン
     ballStart: { x: 50, y: 70 },
     explanations: [
-      "森保ジャパン、3-4-2-1で前進を開始。左サイドに中村敬斗が構える。",
+      "森保ジャパン、3-2-4-1で前進を開始。左サイドに中村敬斗が構える。",
       "中村敬斗がボールを受け、内側のハーフスペースへ絞っていく。",
       "中村のカットインに相手のサイドが食いつき、大外のレーンが空く。",
       "空いた大外を左サイドバックが一気にオーバーラップ。",
@@ -361,40 +361,6 @@ export const TEAMS: TeamData[] = [
 
 // buildMatch が参照する全チーム（現状はドロップダウン用 TEAMS と同一）。
 export const ALL_TEAMS: TeamData[] = [...TEAMS];
-
-// 実況タイムラインの1イベント。クリックで home/away と time を同時に切り替える。
-export type MatchEvent = {
-  minute: string;
-  text: string;
-  homeKey: string; // この局面で攻撃しているチーム
-  awayKey: string; // 守備側
-  time: number; // シークバー位置(0〜100)
-};
-
-// 「日本 vs オランダ」想定のテスト用実況タイムライン。
-export const MATCH_TIMELINE: MatchEvent[] = [
-  {
-    minute: "0分",
-    text: "キックオフ。日本は3-4-2-1、オランダも3-4-2-1でスタート。両チーム、まずは基本陣形で様子を見る。",
-    homeKey: "japan",
-    awayKey: "netherlands",
-    time: 0,
-  },
-  {
-    minute: "24分",
-    text: "⚠️オランダの決定機：シモンズが右ハーフスペースでボールを引き出し、空いた大外をフリンポンが猛烈なスピードで駆け上がる『右サイドのオーバーロード』を展開。",
-    homeKey: "netherlands",
-    awayKey: "japan",
-    time: 100,
-  },
-  {
-    minute: "65分",
-    text: "🔥日本の決定機：左サイドの中村敬斗が内側に絞ってタメを作り、大外を伊藤洋輝がオーバーラップしてチャンスを創出！",
-    homeKey: "japan",
-    awayKey: "netherlands",
-    time: 100,
-  },
-];
 
 // ============================================================
 // 試合（ホーム×アウェイ）データ。Stadium が描画に使う最終的な形。
