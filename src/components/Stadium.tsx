@@ -2,13 +2,7 @@ import { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 // OrbitControls=カメラ操作, Text=3D文字, Billboard=常にカメラを向く板。
 import { OrbitControls, Text, Billboard, Html } from "@react-three/drei";
-import {
-  TEAMS,
-  buildMatch,
-  MATCH_TIMELINE,
-  TIMES,
-  type Position,
-} from "../data/players";
+import { TEAMS, buildMatch, TIMES, type Position } from "../data/players";
 import { Arrow } from "./Arrow";
 import { PitchLines } from "./PitchLines";
 import "./Stadium.css";
@@ -101,10 +95,9 @@ function Stadium() {
   }
   const explanation = explanations[explanationIndex];
 
-  // 実況タイムライン（日本 vs オランダ想定）。現在の home/away/time に一致するイベントをハイライト。
-  const activeEventIndex = MATCH_TIMELINE.findIndex(
-    (ev) => ev.homeKey === homeKey && ev.awayKey === awayKey && ev.time === time
-  );
+  // 実況タイムライン：攻撃側（ホーム）チーム自身の実況データを使う。現在の time に一致するイベントをハイライト。
+  const timelineEvents = homeTeam.timeline;
+  const activeEventIndex = timelineEvents.findIndex((ev) => ev.time === time);
 
   // ホームのドロップダウン表示値（念のため TEAMS に無いキーは japan にフォールバック）。
   const homeSelectValue = TEAMS.some((t) => t.key === homeKey)
@@ -314,24 +307,20 @@ function Stadium() {
         />
       </div>
 
-      {/* 実況タイムライン（日本 vs オランダ）。クリックで陣形・攻守・時刻が同時にジャンプ。 */}
+      {/* 実況タイムライン：選択中の攻撃側（ホーム）チームの実況データを表示。クリックでその時刻へジャンプ。 */}
       <div className="timeline">
         <div className="timeline__title">
           実況タイムライン｜{homeTeam.name} vs {awayTeam.name}
         </div>
         <div className="timeline__list">
-          {MATCH_TIMELINE.map((ev, i) => (
+          {timelineEvents.map((ev, i) => (
             <button
               key={i}
               className={
                 "timeline__item" +
                 (i === activeEventIndex ? " timeline__item--active" : "")
               }
-              onClick={() => {
-                setHomeKey(ev.homeKey);
-                setAwayKey(ev.awayKey);
-                setTime(ev.time);
-              }}
+              onClick={() => setTime(ev.time)}
             >
               <span className="timeline__min">{ev.minute}</span>
               <span className="timeline__text">{ev.text}</span>
