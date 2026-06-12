@@ -316,7 +316,9 @@ function Stadium() {
 
       {/* 実況タイムライン（日本 vs オランダ）。クリックで陣形・攻守・時刻が同時にジャンプ。 */}
       <div className="timeline">
-        <div className="timeline__title">実況タイムライン｜日本 vs オランダ</div>
+        <div className="timeline__title">
+          実況タイムライン｜{homeTeam.name} vs {awayTeam.name}
+        </div>
         <div className="timeline__list">
           {MATCH_TIMELINE.map((ev, i) => (
             <button
