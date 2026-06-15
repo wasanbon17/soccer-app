@@ -45,6 +45,16 @@ function toWorld(pos: Position, y: number): [number, number, number] {
   ];
 }
 
+// 3Dワールド座標 → データ座標(0〜100)。toWorld の逆変換（座標取得＝分析用）。
+// 0〜100 にクランプし、選手座標と同じ目盛りに揃える。
+function fromWorld(worldX: number, worldZ: number): Position {
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+  return {
+    x: clamp((worldX / PITCH_WIDTH + 0.5) * 100),
+    y: clamp((worldZ / PITCH_DEPTH + 0.5) * 100),
+  };
+}
+
 function Stadium() {
   const [homeKey, setHomeKey] = useState(TEAMS[0].key); // ホーム（攻撃側）
   const [awayKey, setAwayKey] = useState(TEAMS[1].key); // アウェイ（守備側）
@@ -52,6 +62,18 @@ function Stadium() {
   const [showReport, setShowReport] = useState(true); // サイドパネルの開閉
   const [reportTab, setReportTab] = useState<"scout" | "lineup">("scout"); // レポート / スタメン表
   const [hoveredId, setHoveredId] = useState<number | null>(null); // ホバー中の選手
+  const [clickedPos, setClickedPos] = useState<Position | null>(null); // 分析用：ピッチクリック座標
+  const [copied, setCopied] = useState(false); // コピー完了フィードバック
+
+  // クリック座標を { "targetX": .., "targetY": .. } 形式でクリップボードへコピー。
+  const handleCopyPos = () => {
+    if (!clickedPos) return;
+    const text = JSON.stringify({ targetX: clickedPos.x, targetY: clickedPos.y });
+    navigator.clipboard
+      ?.writeText(text)
+      .then(() => setCopied(true))
+      .catch(() => setCopied(false));
+  };
 
   // 選んだ2チームから試合データを組み立てる（チーム変更時だけ再計算）。
   const match = useMemo(() => buildMatch(homeKey, awayKey), [homeKey, awayKey]);
@@ -109,7 +131,7 @@ function Stadium() {
       {/* チーム選択ドロップダウン（ホーム=攻撃 / アウェイ=守備） */}
       <div className="control">
         <label className="control__label">
-          ホーム（攻撃）
+          分析するチーム
           <select
             className="control__select"
             value={homeSelectValue}
@@ -126,7 +148,7 @@ function Stadium() {
           </select>
         </label>
         <label className="control__label">
-          アウェイ（守備）
+          対戦相手
           <select
             className="control__select"
             value={awayKey}
@@ -189,6 +211,23 @@ function Stadium() {
 
           {/* 白いライン */}
           <PitchLines width={PITCH_WIDTH} depth={PITCH_DEPTH} />
+
+          {/* 分析用：座標取得プレーン（透明・見た目に影響なし）。
+              クリック地点をデータ座標(0〜100)に変換して State に保存。
+              stopPropagation で他メッシュへのイベント伝播を止める。 */}
+          <mesh
+            position={[0, 0.02, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            onClick={(e) => {
+              e.stopPropagation();
+              const p = fromWorld(e.point.x, e.point.z);
+              setClickedPos({ x: Math.round(p.x), y: Math.round(p.y) });
+              setCopied(false);
+            }}
+          >
+            <planeGeometry args={[PITCH_WIDTH, PITCH_DEPTH]} />
+            <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+          </mesh>
 
           {/* スポットライト演出 */}
           <mesh
@@ -364,8 +403,8 @@ function Stadium() {
 
           {reportTab === "scout"
             ? [
-                { team: homeTeam, role: "ホーム（攻撃）" },
-                { team: awayTeam, role: "アウェイ（守備）" },
+                { team: homeTeam, role: "分析するチーム" },
+                { team: awayTeam, role: "対戦相手" },
               ].map(({ team, role }) => (
                 <div className="report__block" key={role}>
                   <div className="report__role">{role}</div>
@@ -397,8 +436,8 @@ function Stadium() {
                 </div>
               ))
             : [
-                { team: homeTeam, role: "ホーム（攻撃）" },
-                { team: awayTeam, role: "アウェイ（守備）" },
+                { team: homeTeam, role: "分析するチーム" },
+                { team: awayTeam, role: "対戦相手" },
               ].map(({ team, role }) => (
                 <div className="report__block" key={role}>
                   <div className="report__role">{role}</div>
@@ -417,6 +456,47 @@ function Stadium() {
                 </div>
               ))}
         </aside>
+      )}
+
+      {/* 分析用：クリックした座標の表示パネル（右下・邪魔にならない位置） */}
+      {clickedPos && (
+        <div
+          style={{
+            position: "fixed",
+            right: 16,
+            bottom: 16,
+            zIndex: 50,
+            background: "rgba(20, 28, 24, 0.9)",
+            color: "#eafff0",
+            border: "1px solid #3a5a45",
+            borderRadius: 8,
+            padding: "10px 12px",
+            fontFamily: "monospace",
+            fontSize: 13,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            boxShadow: "0 4px 14px rgba(0,0,0,0.35)",
+          }}
+        >
+          <span>
+            クリックした座標: {`{ x: ${clickedPos.x}, y: ${clickedPos.y} }`}
+          </span>
+          <button
+            onClick={handleCopyPos}
+            style={{
+              cursor: "pointer",
+              border: "1px solid #4a7a58",
+              background: copied ? "#2e7d46" : "#1f3a29",
+              color: "#eafff0",
+              borderRadius: 6,
+              padding: "4px 10px",
+              fontSize: 12,
+            }}
+          >
+            {copied ? "✓ コピー済み" : "コピー"}
+          </button>
+        </div>
       )}
     </div>
   );
